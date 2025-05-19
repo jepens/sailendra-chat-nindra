@@ -20,11 +20,17 @@ export const fetchChatSessions = async (): Promise<ChatSession[]> => {
     if (!sessionMap.has(session_id) || 
         new Date(sessionMap.get(session_id)!.last_timestamp).getTime() < currentTimestamp) {
       
-      const messageObj = typeof item.message === 'string' 
-        ? JSON.parse(item.message) 
-        : item.message;
+      // Parse message if it's a string
+      let messageObj = item.message;
+      if (typeof messageObj === 'string') {
+        try {
+          messageObj = JSON.parse(messageObj);
+        } catch (e) {
+          messageObj = { content: messageObj };
+        }
+      }
       
-      const content = messageObj.content || '';
+      const content = messageObj?.content || '';
       // Extract content after the first two lines (if present)
       const lines = content.split('\n');
       const messageContent = lines.length > 2 ? lines.slice(2).join('\n') : content;
@@ -33,7 +39,7 @@ export const fetchChatSessions = async (): Promise<ChatSession[]> => {
         session_id,
         last_message: messageContent,
         last_timestamp: item.created_at || new Date().toISOString(),
-        sender_name: messageObj.sender_name,
+        sender_name: messageObj?.sender_name,
       });
     }
   });
@@ -51,19 +57,24 @@ export const fetchChatMessages = async (sessionId: string): Promise<ChatMessage[
   if (error) throw error;
 
   return data.map(item => {
-    // Ensure message is properly parsed from JSON if it's a string
-    const messageObj = typeof item.message === 'string' 
-      ? JSON.parse(item.message) 
-      : item.message;
+    // Parse message if it's a string
+    let messageObj = item.message;
+    if (typeof messageObj === 'string') {
+      try {
+        messageObj = JSON.parse(messageObj);
+      } catch (e) {
+        messageObj = { content: messageObj, type: 'human' };
+      }
+    }
     
     return {
       id: item.id,
       session_id: item.session_id,
       message: {
-        content: messageObj.content || '',
-        type: messageObj.type || 'human',
-        sender_name: messageObj.sender_name,
-        timestamp: messageObj.timestamp || item.created_at,
+        content: messageObj?.content || '',
+        type: messageObj?.type || 'human',
+        sender_name: messageObj?.sender_name,
+        timestamp: messageObj?.timestamp || item.created_at,
       },
       created_at: item.created_at || new Date().toISOString(),
     };
@@ -90,7 +101,7 @@ export const sendMessage = async (sessionId: string, message: string): Promise<C
 
   // Then, send to webhook (this will happen asynchronously)
   try {
-    fetch('https://your-n8n-url.com/webhook/send-reply', {
+    fetch('https://yourdomain.com/webhook/send-message', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -100,16 +111,24 @@ export const sendMessage = async (sessionId: string, message: string): Promise<C
         message: message,
       }),
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to send message to webhook:', error);
+  }
+
+  // Parse message if it's a string
+  let messageObj = data.message;
+  if (typeof messageObj === 'string') {
+    try {
+      messageObj = JSON.parse(messageObj);
+    } catch (e) {
+      messageObj = { content: messageObj, type: 'human' };
+    }
   }
 
   return {
     id: data.id,
     session_id: data.session_id,
-    message: typeof data.message === 'string' 
-      ? JSON.parse(data.message) 
-      : data.message,
+    message: messageObj,
     created_at: data.created_at || new Date().toISOString(),
   };
 };

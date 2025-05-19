@@ -2,111 +2,106 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+ 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-
+ 
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 199 89% 48%;
+ 
+    --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
-
+ 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-
+ 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
+ 
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
-
+ 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 199 89% 48%;
-    
+    --ring: 222.2 84% 4.9%;
+ 
     --radius: 0.5rem;
-    
-    --sidebar-background: 217 33% 17%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 25% 27%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 216 34% 17%;
-    --sidebar-ring: 199 89% 48%;
-  }
 
+    --sailendra-50: 209 100% 96%;
+    --sailendra-100: 210 100% 91%;
+    --sailendra-200: 208 100% 82%;
+    --sailendra-300: 207 100% 72%;
+    --sailendra-400: 206 100% 61%;
+    --sailendra-500: 205 100% 50%;
+    --sailendra-600: 205 100% 42%;
+    --sailendra-700: 205 100% 33%;
+    --sailendra-800: 207 100% 27%;
+    --sailendra-900: 208 100% 22%;
+    --sailendra-950: 209 100% 15%;
+  }
+ 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
+ 
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
+ 
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
-    --primary: 199 89% 48%;
+ 
+    --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
-
+ 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
+ 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
+ 
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
+ 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
+ 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 199 89% 48%;
-    
-    --sidebar-background: 222.2 84% 4.9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 199 89% 48%;
+    --ring: 212.7 26.8% 83.9%;
   }
 }
-
+ 
 @layer base {
   * {
     @apply border-border;
   }
-  
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground;
   }
-  
-  .message-bubble-outgoing {
-    @apply bg-sailendra-500 text-white rounded-l-lg rounded-tr-lg p-3 max-w-[80%] break-words;
-  }
-  
-  .message-bubble-incoming {
-    @apply bg-white text-gray-800 dark:bg-gray-700 dark:text-white rounded-r-lg rounded-tl-lg p-3 max-w-[80%] break-words shadow-sm;
-  }
-  
+}
+
+@layer components {
   .chat-list-item {
-    @apply hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer p-3 border-b transition-colors duration-200;
+    @apply p-3 cursor-pointer hover:bg-gray-50 border-l-4 border-transparent;
   }
   
   .chat-list-item.active {
-    @apply bg-gray-100 dark:bg-gray-700 border-l-4 border-l-sailendra-500;
+    @apply border-l-4 border-l-sailendra-500 bg-gray-50;
+  }
+  
+  .message-bubble-incoming {
+    @apply bg-gray-100 dark:bg-gray-700 p-3 rounded-lg rounded-tl-none max-w-[80%] text-gray-800 dark:text-white;
+  }
+  
+  .message-bubble-outgoing {
+    @apply bg-sailendra-500 p-3 rounded-lg rounded-tr-none max-w-[80%] text-white dark:text-white;
   }
 }

@@ -17,7 +17,7 @@ const Settings = () => {
   const [isTokenLoading, setIsTokenLoading] = useState(false);
   
   // Webhook Settings
-  const [webhookUrl, setWebhookUrl] = useState("https://example.com/webhook/send-message");
+  const [webhookUrl, setWebhookUrl] = useState("https://yourdomain.com/webhook/send-message");
   const [isWebhookLoading, setIsWebhookLoading] = useState(false);
   
   // Admin Settings

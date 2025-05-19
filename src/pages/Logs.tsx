@@ -173,7 +173,7 @@ const Logs = () => {
                   <SelectValue placeholder="All Messages" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Messages</SelectItem>
+                  <SelectItem value="all">All Messages</SelectItem>
                   <SelectItem value="incoming">Incoming</SelectItem>
                   <SelectItem value="outgoing">Outgoing</SelectItem>
                 </SelectContent>

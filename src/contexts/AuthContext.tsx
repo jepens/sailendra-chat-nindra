@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (event === 'SIGNED_IN') {
           toast.success('Login successful');
-          navigate('/chat');
+          navigate('/dashboard');
         } else if (event === 'SIGNED_OUT') {
           navigate('/login');
           toast.info('Logged out successfully');

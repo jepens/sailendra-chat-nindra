@@ -80,19 +80,7 @@ const Chat = () => {
     }
   }, [selectedSessionId, loadMessages]);
   
-  // Set up polling for new messages
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (user) {
-        loadSessions();
-        if (selectedSessionId) {
-          loadMessages();
-        }
-      }
-    }, 5000); // Refresh every 5 seconds
-    
-    return () => clearInterval(interval);
-  }, [user, selectedSessionId, loadSessions, loadMessages]);
+  // Removed the polling interval for auto-refresh
   
   // Handle sending a message
   const handleSendMessage = async (message: string) => {

@@ -1,72 +1,35 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
 
 const Login = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signIn, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
+      toast.error("Please fill in all fields");
       return;
     }
     
-    setIsLoading(true);
-    
     try {
-      // TODO: Replace with actual Supabase auth when integrated
-      console.log("Logging in with:", email, password);
-      
-      // Temporary mock login for demo purposes
-      if (email === "admin@sailendrachatbot.com" && password === "password") {
-        // Mock successful login
-        setTimeout(() => {
-          toast({
-            title: "Success",
-            description: "You've successfully logged in!",
-          });
-          navigate("/chat");
-          setIsLoading(false);
-        }, 1000);
-      } else {
-        // Mock failed login
-        setTimeout(() => {
-          toast({
-            title: "Login Failed",
-            description: "Invalid email or password",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-        }, 1000);
-      }
+      await signIn(email, password);
     } catch (error) {
-      console.error("Login error:", error);
-      toast({
-        title: "Error",
-        description: "An error occurred during login",
-        variant: "destructive",
-      });
-      setIsLoading(false);
+      // Error is handled in the auth context
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
       <div className="w-full max-w-md px-4">
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-2">
@@ -86,14 +49,14 @@ const Login = () => {
                 <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"></path>
               </svg>
             </div>
-            <div className="text-2xl font-bold text-gray-900">Sailendra ChatBot</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">Sailendra ChatBot</div>
           </div>
         </div>
         
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader>
-            <CardTitle>Admin Login</CardTitle>
-            <CardDescription>
+            <CardTitle className="dark:text-white">Admin Login</CardTitle>
+            <CardDescription className="dark:text-gray-300">
               Enter your credentials to access the dashboard
             </CardDescription>
           </CardHeader>
@@ -101,7 +64,7 @@ const Login = () => {
             <form onSubmit={handleLogin}>
               <div className="grid gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="dark:text-gray-200">Email</Label>
                   <Input
                     id="email"
                     type="email"
@@ -110,10 +73,11 @@ const Login = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading}
                     required
+                    className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="dark:text-gray-200">Password</Label>
                   <Input
                     id="password"
                     type="password"
@@ -121,6 +85,7 @@ const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}
                     required
+                    className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
                   />
                 </div>
               </div>
@@ -132,14 +97,15 @@ const Login = () => {
               onClick={handleLogin}
               disabled={isLoading}
             >
-              {isLoading ? "Logging in..." : "Log In"}
+              {isLoading ? (
+                <span className="flex items-center">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                  Logging in...
+                </span>
+              ) : "Log In"}
             </Button>
           </CardFooter>
         </Card>
-        
-        <div className="mt-4 text-center text-sm text-gray-500">
-          <p>For demo purposes: admin@sailendrachatbot.com / password</p>
-        </div>
       </div>
     </div>
   );

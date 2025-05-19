@@ -99,14 +99,14 @@
   }
   
   .message-bubble-incoming {
-    @apply bg-white text-gray-800 rounded-r-lg rounded-tl-lg p-3 max-w-[80%] break-words shadow-sm;
+    @apply bg-white text-gray-800 dark:bg-gray-700 dark:text-white rounded-r-lg rounded-tl-lg p-3 max-w-[80%] break-words shadow-sm;
   }
   
   .chat-list-item {
-    @apply hover:bg-gray-100 cursor-pointer p-3 border-b transition-colors duration-200;
+    @apply hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer p-3 border-b transition-colors duration-200;
   }
   
   .chat-list-item.active {
-    @apply bg-gray-100 border-l-4 border-l-sailendra-500;
+    @apply bg-gray-100 dark:bg-gray-700 border-l-4 border-l-sailendra-500;
   }
 }

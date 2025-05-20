@@ -1,35 +1,82 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-export interface WhatsAppSettings {
-  token: string;
-  webhookUrl: string;
-}
+export type AppSetting = {
+  id: number;
+  key: string;
+  value: string;
+  created_at: string;
+  updated_at: string;
+};
 
-// Function to fetch settings
-export const fetchSettings = async (): Promise<WhatsAppSettings | null> => {
-  // In a real implementation, you would fetch this from a settings table
-  // For now, we'll return hardcoded values until a settings table is created
+/**
+ * Fetches a setting by key from the app_settings table
+ */
+export const getSetting = async (key: string): Promise<string | null> => {
+  const { data, error } = await supabase
+    .from('app_settings')
+    .select('value')
+    .eq('key', key)
+    .single();
   
-  // You might want to create a settings table with a SQL migration later
-  return {
-    token: "MOCK_WA_TOKEN_123456", // Placeholder until real settings are implemented
-    webhookUrl: "https://yourdomain.com/webhook/send-message"
-  };
+  if (error) {
+    console.error('Error fetching setting:', error);
+    return null;
+  }
+  
+  return data?.value || null;
 };
 
-// Function to update WhatsApp token
-export const updateWhatsAppToken = async (token: string): Promise<void> => {
-  // In a real implementation, you would update this in a settings table
-  console.log("Updating WhatsApp token:", token);
-  // For now, just simulate a successful update
-  return Promise.resolve();
+/**
+ * Updates a setting in the app_settings table
+ */
+export const updateSetting = async (key: string, value: string): Promise<boolean> => {
+  const { error } = await supabase
+    .from('app_settings')
+    .update({ 
+      value,
+      updated_at: new Date().toISOString()
+    })
+    .eq('key', key);
+  
+  if (error) {
+    console.error('Error updating setting:', error);
+    return false;
+  }
+  
+  return true;
 };
 
-// Function to update webhook URL
-export const updateWebhookUrl = async (url: string): Promise<void> => {
-  // In a real implementation, you would update this in a settings table
-  console.log("Updating webhook URL:", url);
-  // For now, just simulate a successful update
-  return Promise.resolve();
+/**
+ * Tests a webhook URL by sending a test payload
+ */
+export const testWebhook = async (url: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        test: true,
+        message: 'This is a test message from the WhatsApp chatbot system',
+        timestamp: new Date().toISOString()
+      }),
+    });
+    
+    if (!response.ok) {
+      return { 
+        success: false, 
+        message: `Failed to send test: Server responded with ${response.status} ${response.statusText}` 
+      };
+    }
+    
+    return { success: true, message: 'Webhook test successful!' };
+  } catch (error) {
+    console.error('Error testing webhook:', error);
+    return { 
+      success: false, 
+      message: `Error testing webhook: ${error instanceof Error ? error.message : String(error)}` 
+    };
+  }
 };

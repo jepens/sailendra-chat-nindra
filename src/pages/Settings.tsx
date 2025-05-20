@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,18 +7,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getSetting, updateSetting, testWebhook } from "@/services/settingsService";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 const Settings = () => {
   const { toast } = useToast();
   
   // API Settings
-  const [whatsappToken, setWhatsappToken] = useState("MOCK_WA_TOKEN_123456");
+  const [whatsappToken, setWhatsappToken] = useState("");
   const [isTokenVisible, setIsTokenVisible] = useState(false);
   const [isTokenLoading, setIsTokenLoading] = useState(false);
   
   // Webhook Settings
-  const [webhookUrl, setWebhookUrl] = useState("https://yourdomain.com/webhook/send-message");
+  const [webhookUrl, setWebhookUrl] = useState("");
   const [isWebhookLoading, setIsWebhookLoading] = useState(false);
+  const [isTestingWebhook, setIsTestingWebhook] = useState(false);
+  const [webhookTestResult, setWebhookTestResult] = useState<{ success: boolean; message: string } | null>(null);
   
   // Admin Settings
   const [currentPassword, setCurrentPassword] = useState("");
@@ -26,7 +30,26 @@ const Settings = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
   
-  const handleSaveToken = () => {
+  // Load settings from database on component mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      // Load WhatsApp token
+      const token = await getSetting('whatsapp_token');
+      if (token) {
+        setWhatsappToken(token);
+      }
+      
+      // Load webhook URL
+      const webhook = await getSetting('webhook_url');
+      if (webhook) {
+        setWebhookUrl(webhook);
+      }
+    };
+    
+    loadSettings();
+  }, []);
+  
+  const handleSaveToken = async () => {
     if (!whatsappToken) {
       toast({
         title: "Error",
@@ -38,17 +61,25 @@ const Settings = () => {
     
     setIsTokenLoading(true);
     
-    // TODO: Replace with actual API call to update token
-    setTimeout(() => {
+    const success = await updateSetting('whatsapp_token', whatsappToken);
+    
+    if (success) {
       toast({
         title: "Success",
         description: "WhatsApp API token updated successfully",
       });
-      setIsTokenLoading(false);
-    }, 1000);
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to update WhatsApp API token",
+        variant: "destructive",
+      });
+    }
+    
+    setIsTokenLoading(false);
   };
   
-  const handleSaveWebhook = () => {
+  const handleSaveWebhook = async () => {
     if (!webhookUrl) {
       toast({
         title: "Error",
@@ -60,14 +91,49 @@ const Settings = () => {
     
     setIsWebhookLoading(true);
     
-    // TODO: Replace with actual API call to update webhook URL
-    setTimeout(() => {
+    const success = await updateSetting('webhook_url', webhookUrl);
+    
+    if (success) {
       toast({
         title: "Success",
         description: "Webhook URL updated successfully",
       });
-      setIsWebhookLoading(false);
-    }, 1000);
+      // Reset test result when URL is changed
+      setWebhookTestResult(null);
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to update webhook URL",
+        variant: "destructive",
+      });
+    }
+    
+    setIsWebhookLoading(false);
+  };
+  
+  const handleTestWebhook = async () => {
+    if (!webhookUrl) {
+      toast({
+        title: "Error",
+        description: "Please enter a webhook URL to test",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsTestingWebhook(true);
+    setWebhookTestResult(null);
+    
+    const result = await testWebhook(webhookUrl);
+    setWebhookTestResult(result);
+    
+    toast({
+      title: result.success ? "Success" : "Error",
+      description: result.message,
+      variant: result.success ? "default" : "destructive",
+    });
+    
+    setIsTestingWebhook(false);
   };
   
   const handleChangePassword = () => {
@@ -178,6 +244,27 @@ const Settings = () => {
                     onChange={(e) => setWebhookUrl(e.target.value)}
                   />
                 </div>
+                
+                {webhookTestResult && (
+                  <div className={`p-3 border rounded-md ${webhookTestResult.success ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0 pt-0.5">
+                        {webhookTestResult.success ? (
+                          <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <AlertCircle className="h-5 w-5 text-red-500" />
+                        )}
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm font-medium">
+                          {webhookTestResult.success ? 'Test successful' : 'Test failed'}
+                        </p>
+                        <p className="text-sm mt-1">{webhookTestResult.message}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <div>
                   <p className="text-sm text-muted-foreground">
                     This webhook URL will be called when sending messages from the chatbot system.
@@ -185,8 +272,18 @@ const Settings = () => {
                   </p>
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button onClick={handleSaveWebhook} disabled={isWebhookLoading}>
+              <CardFooter className="flex justify-between">
+                <Button 
+                  onClick={handleTestWebhook} 
+                  variant="outline" 
+                  disabled={isTestingWebhook || isWebhookLoading}
+                >
+                  {isTestingWebhook ? "Testing..." : "Test Webhook"}
+                </Button>
+                <Button 
+                  onClick={handleSaveWebhook} 
+                  disabled={isWebhookLoading || isTestingWebhook}
+                >
                   {isWebhookLoading ? "Saving..." : "Save Changes"}
                 </Button>
               </CardFooter>

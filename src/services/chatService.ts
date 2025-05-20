@@ -1,5 +1,7 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ChatMessage, ChatSession } from '@/types/chat';
+import { getSetting } from './settingsService';
 
 // Define a type that represents the expected message structure
 type MessageObject = {
@@ -109,8 +111,8 @@ export const sendMessage = async (sessionId: string, message: string): Promise<C
 
   // Then, send to webhook (this will happen asynchronously)
   try {
-    // Fetch the webhook URL from settings or use a default
-    const webhookUrl = "https://yourdomain.com/webhook/send-message"; // In a real app, this would come from settings
+    // Fetch the webhook URL from settings
+    const webhookUrl = await getSetting('webhook_url') || "https://yourdomain.com/webhook/send-message";
     
     fetch(webhookUrl, {
       method: 'POST',

@@ -1,10 +1,9 @@
-
 export interface ChatMessage {
   id: number;
   session_id: string;
   message: {
     content: string;
-    type: 'human' | 'ai';
+    type: 'human' | 'ai' | 'agent';
     sender_name?: string;
     timestamp?: string;
   };

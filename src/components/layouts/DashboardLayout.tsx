@@ -1,4 +1,3 @@
-
 import { ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -26,22 +25,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       {/* Header */}
       <header className="h-16 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex items-center justify-between px-6 z-10">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sailendra-600">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-white"
-            >
-              <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"></path>
-            </svg>
-          </div>
+          <img src="/logo.png" alt="Sailendra Logo" className="h-10 w-10" />
           <span className="font-semibold text-lg dark:text-white hidden md:inline">Sailendra ChatBot</span>
         </div>
         <div className="flex items-center gap-3">
@@ -90,6 +74,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           {children}
         </main>
       </div>
+      {/* Footer */}
+      <footer className="h-12 bg-white dark:bg-gray-800 border-t dark:border-gray-700 flex items-center justify-center px-6">
+        <p className="text-sm text-gray-600 dark:text-gray-300">© 2025 Sailendra Organizer, Created by Bedul Tampan</p>
+      </footer>
     </div>
   );
 };

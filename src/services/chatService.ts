@@ -6,7 +6,7 @@ import { getSetting } from './settingsService';
 // Define a type that represents the expected message structure
 type MessageObject = {
   content: string;
-  type?: 'human' | 'ai';
+  type?: 'human' | 'ai' | 'agent';
   sender_name?: string;
   timestamp?: string;
 };
@@ -112,20 +112,29 @@ export const sendMessage = async (sessionId: string, message: string): Promise<C
   // Then, send to webhook (this will happen asynchronously)
   try {
     // Fetch the webhook URL from settings
-    const webhookUrl = await getSetting('webhook_url') || "https://yourdomain.com/webhook/send-message";
+    const webhookUrl = await getSetting('webhook_url');
     
-    fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    if (webhookUrl) {
+      const timestamp = new Date().toISOString();
+      
+      // Create webhook payload matching the format in testWebhook
+      const webhookPayload = {
         session_id: sessionId,
-        message: message,
-      }),
-    }).catch(err => {
-      console.error('Failed to send message to webhook:', err);
-    });
+        message: messageObject,
+        sender_type: messageObject.type || 'human',
+        timestamp: timestamp
+      };
+      
+      fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookPayload),
+      }).catch(err => {
+        console.error('Failed to send message to webhook:', err);
+      });
+    }
   } catch (error: any) {
     console.error('Failed to send message to webhook:', error);
   }

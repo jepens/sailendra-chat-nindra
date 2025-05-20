@@ -52,12 +52,20 @@ export const updateSetting = async (key: string, value: string): Promise<boolean
  */
 export const testWebhook = async (url: string): Promise<{ success: boolean; message: string }> => {
   try {
-    // Create test payload based on the required format
+    const timestamp = new Date().toISOString();
+    
+    // Create message object matching the format in chatService
+    const messageObject = {
+      content: "This is a test message from the WhatsApp chatbot system",
+      type: "agent" as const,
+    };
+    
+    // Create test payload based on the format used in chatService.ts
     const testPayload = {
       session_id: "6281234567890",
-      message: "This is a test message from the WhatsApp chatbot system",
+      message: messageObject,
       sender_type: "agent",
-      timestamp: new Date().toISOString()
+      timestamp: timestamp
     };
     
     const response = await fetch(url, {

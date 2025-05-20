@@ -1,88 +1,48 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-
-interface LogEntry {
-  id: string;
-  waId: string;
-  fromNumber: string;
-  toNumber: string;
-  message: string;
-  messageType: string;
-  direction: "incoming" | "outgoing";
-  timestamp: string;
-  status: string;
-}
+import { fetchLogs, LogEntry } from "@/services/logService";
+import { useToast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react";
 
 const Logs = () => {
+  const { toast } = useToast();
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [direction, setDirection] = useState<string | undefined>(undefined);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Mock data for logs
-  const [logs, setLogs] = useState<LogEntry[]>([
-    {
-      id: "log1",
-      waId: "62812345678",
-      fromNumber: "+62 812-3456-78",
-      toNumber: "whatsapp",
-      message: "Hello, I have a question about your services",
-      messageType: "text",
-      direction: "incoming",
-      timestamp: "2023-05-19T10:23:00Z",
-      status: "read"
-    },
-    {
-      id: "log2",
-      waId: "62812345678",
-      fromNumber: "whatsapp",
-      toNumber: "+62 812-3456-78",
-      message: "Hi John, how can I help you today?",
-      messageType: "text",
-      direction: "outgoing",
-      timestamp: "2023-05-19T10:25:00Z",
-      status: "delivered"
-    },
-    {
-      id: "log3",
-      waId: "62898765432",
-      fromNumber: "+62 898-7654-32",
-      toNumber: "whatsapp",
-      message: "I've been trying to access my account",
-      messageType: "text",
-      direction: "incoming",
-      timestamp: "2023-05-19T09:40:00Z",
-      status: "read"
-    },
-    {
-      id: "log4",
-      waId: "62898765432",
-      fromNumber: "whatsapp",
-      toNumber: "+62 898-7654-32",
-      message: "Could you please provide your account email so I can check?",
-      messageType: "text",
-      direction: "outgoing",
-      timestamp: "2023-05-19T09:42:00Z",
-      status: "delivered"
-    },
-    {
-      id: "log5",
-      waId: "62856781234",
-      fromNumber: "+62 856-7812-34",
-      toNumber: "whatsapp",
-      message: "I'd like to schedule a meeting",
-      messageType: "text",
-      direction: "incoming",
-      timestamp: "2023-05-18T16:30:00Z",
-      status: "read"
+  const fetchLogData = async () => {
+    setIsLoading(true);
+    try {
+      const data = await fetchLogs(dateFrom, dateTo, phoneNumber, direction);
+      setLogs(data);
+    } catch (error) {
+      console.error('Failed to fetch logs:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch message logs. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-  ]);
+  };
+  
+  useEffect(() => {
+    fetchLogData();
+  }, []);
+  
+  const handleApplyFilters = () => {
+    fetchLogData();
+  };
   
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -96,36 +56,13 @@ const Logs = () => {
     }).format(date);
   };
   
-  // Filter logs based on search criteria
-  const filteredLogs = logs.filter(log => {
-    const matchesPhone = !phoneNumber || 
-      log.fromNumber.includes(phoneNumber) || 
-      log.toNumber.includes(phoneNumber);
-    
-    const matchesDirection = !direction || log.direction === direction;
-    
-    let matchesDate = true;
-    if (dateFrom) {
-      const fromDate = new Date(dateFrom);
-      const logDate = new Date(log.timestamp);
-      if (fromDate > logDate) matchesDate = false;
-    }
-    
-    if (dateTo) {
-      const toDate = new Date(dateTo);
-      toDate.setHours(23, 59, 59, 999); // End of the selected day
-      const logDate = new Date(log.timestamp);
-      if (toDate < logDate) matchesDate = false;
-    }
-    
-    return matchesPhone && matchesDirection && matchesDate;
-  });
-  
   const handleReset = () => {
     setDateFrom("");
     setDateTo("");
     setPhoneNumber("");
     setDirection(undefined);
+    // Fetch without filters after reset
+    fetchLogs().then(setLogs).catch(console.error);
   };
 
   return (
@@ -174,8 +111,8 @@ const Logs = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Messages</SelectItem>
-                  <SelectItem value="incoming">Incoming</SelectItem>
-                  <SelectItem value="outgoing">Outgoing</SelectItem>
+                  <SelectItem value="ai">Incoming</SelectItem>
+                  <SelectItem value="human">Outgoing</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -183,59 +120,65 @@ const Logs = () => {
           
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={handleReset}>Reset</Button>
-            <Button>Apply Filters</Button>
+            <Button onClick={handleApplyFilters}>Apply Filters</Button>
           </div>
         </Card>
         
         <div className="bg-white rounded-md shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-gray-50 text-gray-700 uppercase">
-                <tr>
-                  <th className="px-6 py-3">Timestamp</th>
-                  <th className="px-6 py-3">Number</th>
-                  <th className="px-6 py-3">Message</th>
-                  <th className="px-6 py-3">Direction</th>
-                  <th className="px-6 py-3">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredLogs.length > 0 ? (
-                  filteredLogs.map((log) => (
-                    <tr key={log.id} className="border-b">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {formatTimestamp(log.timestamp)}
-                      </td>
-                      <td className="px-6 py-4">
-                        {log.direction === "incoming" ? log.fromNumber : log.toNumber}
-                      </td>
-                      <td className="px-6 py-4 max-w-xs truncate">
-                        {log.message}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          log.direction === "incoming" 
-                            ? "bg-green-100 text-green-800" 
-                            : "bg-blue-100 text-blue-800"
-                        }`}>
-                          {log.direction === "incoming" ? "Incoming" : "Outgoing"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        {log.status}
+          {isLoading ? (
+            <div className="p-8 flex justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-sailendra-500" />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-gray-50 text-gray-700 uppercase">
+                  <tr>
+                    <th className="px-6 py-3">Timestamp</th>
+                    <th className="px-6 py-3">Number</th>
+                    <th className="px-6 py-3">Message</th>
+                    <th className="px-6 py-3">Direction</th>
+                    <th className="px-6 py-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs.length > 0 ? (
+                    logs.map((log) => (
+                      <tr key={log.id} className="border-b">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {formatTimestamp(log.timestamp)}
+                        </td>
+                        <td className="px-6 py-4">
+                          {log.direction === "incoming" ? log.fromNumber : log.toNumber}
+                        </td>
+                        <td className="px-6 py-4 max-w-xs truncate">
+                          {log.message}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            log.direction === "incoming" 
+                              ? "bg-green-100 text-green-800" 
+                              : "bg-blue-100 text-blue-800"
+                          }`}>
+                            {log.direction === "incoming" ? "Incoming" : "Outgoing"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          {log.status}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-4 text-center">
+                        No logs found matching your filters.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-4 text-center">
-                      No logs found matching your filters.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>

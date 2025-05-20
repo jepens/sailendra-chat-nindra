@@ -19,11 +19,17 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
   };
   
   const content = processContent(message.message.content || '');
-  const timestamp = message.created_at || new Date().toISOString();
+  const timestamp = message.message.timestamp || message.created_at || new Date().toISOString();
   
   return (
     <div className={`flex ${isOutgoing ? 'justify-end' : 'justify-start'} mb-4`}>
-      <div className={isOutgoing ? 'message-bubble-outgoing' : 'message-bubble-incoming'}>
+      <div 
+        className={`rounded-lg p-3 max-w-[80%] break-words ${
+          isOutgoing 
+            ? 'bg-blue-500 text-white' 
+            : 'bg-gray-200 dark:bg-gray-700 dark:text-white'
+        }`}
+      >
         <div className="whitespace-pre-wrap">{content}</div>
         <div className="text-xs mt-1 flex justify-end opacity-70">
           {formatDistanceToNow(new Date(timestamp), { addSuffix: true })}

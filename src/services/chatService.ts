@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ChatMessage, ChatSession } from '@/types/chat';
 
@@ -110,7 +109,10 @@ export const sendMessage = async (sessionId: string, message: string): Promise<C
 
   // Then, send to webhook (this will happen asynchronously)
   try {
-    fetch('https://yourdomain.com/webhook/send-message', {
+    // Fetch the webhook URL from settings or use a default
+    const webhookUrl = "https://yourdomain.com/webhook/send-message"; // In a real app, this would come from settings
+    
+    fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -119,6 +121,8 @@ export const sendMessage = async (sessionId: string, message: string): Promise<C
         session_id: sessionId,
         message: message,
       }),
+    }).catch(err => {
+      console.error('Failed to send message to webhook:', err);
     });
   } catch (error: any) {
     console.error('Failed to send message to webhook:', error);

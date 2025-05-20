@@ -52,16 +52,20 @@ export const updateSetting = async (key: string, value: string): Promise<boolean
  */
 export const testWebhook = async (url: string): Promise<{ success: boolean; message: string }> => {
   try {
+    // Create test payload based on the required format
+    const testPayload = {
+      session_id: "6281234567890",
+      message: "This is a test message from the WhatsApp chatbot system",
+      sender_type: "agent",
+      timestamp: new Date().toISOString()
+    };
+    
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        test: true,
-        message: 'This is a test message from the WhatsApp chatbot system',
-        timestamp: new Date().toISOString()
-      }),
+      body: JSON.stringify(testPayload),
     });
     
     if (!response.ok) {

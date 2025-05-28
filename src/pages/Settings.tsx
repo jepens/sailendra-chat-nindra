@@ -1,251 +1,153 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
-import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getSetting, updateSetting, testWebhook } from "@/services/settingsService";
+import { getSetting, setSetting, testWebhook } from "@/services/settingsService";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 const Settings = () => {
   const { toast } = useToast();
-  
-  // Webhook Settings
   const [webhookUrl, setWebhookUrl] = useState("");
-  const [isWebhookLoading, setIsWebhookLoading] = useState(false);
-  const [isTestingWebhook, setIsTestingWebhook] = useState(false);
-  const [webhookTestResult, setWebhookTestResult] = useState<{ success: boolean; message: string } | null>(null);
-  
-  // Admin Settings
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
-  
-  // Load settings from database on component mount
+  const [isSaving, setIsSaving] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
+
   useEffect(() => {
+    // Load settings
     const loadSettings = async () => {
-      // Load webhook URL
-      const webhook = await getSetting('webhook_url');
-      if (webhook) {
-        setWebhookUrl(webhook);
+      try {
+        const url = await getSetting('webhook_url');
+        if (url) setWebhookUrl(url);
+      } catch (error) {
+        console.error('Error loading settings:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load settings",
+          variant: "destructive",
+        });
       }
     };
-    
+
     loadSettings();
-  }, []);
-  
-  const handleSaveWebhook = async () => {
-    if (!webhookUrl) {
-      toast({
-        title: "Error",
-        description: "Webhook URL cannot be empty",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsWebhookLoading(true);
-    
-    const success = await updateSetting('webhook_url', webhookUrl);
-    
-    if (success) {
+  }, [toast]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await setSetting('webhook_url', webhookUrl);
       toast({
         title: "Success",
-        description: "Webhook URL updated successfully",
+        description: "Settings saved successfully",
       });
-      // Reset test result when URL is changed
-      setWebhookTestResult(null);
-    } else {
+    } catch (error) {
+      console.error('Error saving settings:', error);
       toast({
         title: "Error",
-        description: "Failed to update webhook URL",
+        description: "Failed to save settings",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
-    
-    setIsWebhookLoading(false);
   };
-  
-  const handleTestWebhook = async () => {
-    if (!webhookUrl) {
+
+  const handleTest = async () => {
+    setIsTesting(true);
+    setTestResult(null);
+    
+    try {
+      const result = await testWebhook(webhookUrl);
+      setTestResult(result);
+      
+      toast({
+        title: result.success ? "Success" : "Error",
+        description: result.message,
+        variant: result.success ? "default" : "destructive",
+      });
+    } catch (error) {
+      console.error('Error testing webhook:', error);
       toast({
         title: "Error",
-        description: "Please enter a webhook URL to test",
+        description: "Failed to test webhook",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setIsTesting(false);
     }
-    
-    setIsTestingWebhook(true);
-    setWebhookTestResult(null);
-    
-    const result = await testWebhook(webhookUrl);
-    setWebhookTestResult(result);
-    
-    toast({
-      title: result.success ? "Success" : "Error",
-      description: result.message,
-      variant: result.success ? "default" : "destructive",
-    });
-    
-    setIsTestingWebhook(false);
-  };
-  
-  const handleChangePassword = () => {
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Please fill in all password fields",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (newPassword !== confirmPassword) {
-      toast({
-        title: "Error",
-        description: "New passwords do not match",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsPasswordLoading(true);
-    
-    // TODO: Replace with actual API call to change password
-    setTimeout(() => {
-      toast({
-        title: "Success",
-        description: "Password changed successfully",
-      });
-      setIsPasswordLoading(false);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    }, 1000);
   };
 
   return (
-    <DashboardLayout>
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-6">Settings</h1>
-        
-        <Tabs defaultValue="webhook" className="w-full">
-          <TabsList className="mb-6">
+    <DashboardLayout title="Settings">
+      <div className="p-4">
+        <Tabs defaultValue="general">
+          <TabsList>
+            <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="webhook">Webhook</TabsTrigger>
-            <TabsTrigger value="account">Account</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="webhook">
-            <Card>
-              <CardHeader>
-                <CardTitle>Webhook Configuration</CardTitle>
-                <CardDescription>
-                  Configure the webhook URL for sending WhatsApp messages
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="webhook-url">n8n Webhook URL</Label>
-                  <Input
-                    id="webhook-url"
-                    type="text"
-                    value={webhookUrl}
-                    onChange={(e) => setWebhookUrl(e.target.value)}
-                  />
-                </div>
-                
-                {webhookTestResult && (
-                  <div className={`p-3 border rounded-md ${webhookTestResult.success ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0 pt-0.5">
-                        {webhookTestResult.success ? (
-                          <CheckCircle2 className="h-5 w-5 text-green-500" />
-                        ) : (
-                          <AlertCircle className="h-5 w-5 text-red-500" />
-                        )}
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-sm font-medium">
-                          {webhookTestResult.success ? 'Test successful' : 'Test failed'}
-                        </p>
-                        <p className="text-sm mt-1">{webhookTestResult.message}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    This webhook URL will be called when sending messages from the chatbot system.
-                    Make sure your n8n workflow is configured to receive requests at this URL.
-                  </p>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button 
-                  onClick={handleTestWebhook} 
-                  variant="outline" 
-                  disabled={isTestingWebhook || isWebhookLoading}
-                >
-                  {isTestingWebhook ? "Testing..." : "Test Webhook"}
-                </Button>
-                <Button 
-                  onClick={handleSaveWebhook} 
-                  disabled={isWebhookLoading || isTestingWebhook}
-                >
-                  {isWebhookLoading ? "Saving..." : "Save Changes"}
-                </Button>
-              </CardFooter>
+          <TabsContent value="general">
+            <Card className="p-6">
+              <h2 className="text-lg font-medium mb-4">General Settings</h2>
+              <p className="text-muted-foreground">Coming soon...</p>
             </Card>
           </TabsContent>
           
-          <TabsContent value="account">
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Settings</CardTitle>
-                <CardDescription>
-                  Manage your administrator account credentials
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="current-password">Current Password</Label>
+          <TabsContent value="webhook">
+            <Card className="p-6">
+              <h2 className="text-lg font-medium mb-4">Webhook Configuration</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="webhookUrl">Webhook URL</Label>
                   <Input
-                    id="current-password"
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    id="webhookUrl"
+                    value={webhookUrl}
+                    onChange={(e) => setWebhookUrl(e.target.value)}
+                    placeholder="Enter webhook URL"
+                    className="mt-1"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="new-password">New Password</Label>
-                  <Input
-                    id="new-password"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                  />
+                
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleSave}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? "Saving..." : "Save"}
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={handleTest}
+                    disabled={!webhookUrl || isTesting}
+                  >
+                    {isTesting ? "Testing..." : "Test Webhook"}
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm New Password</Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                  />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={handleChangePassword} disabled={isPasswordLoading}>
-                  {isPasswordLoading ? "Changing Password..." : "Change Password"}
-                </Button>
-              </CardFooter>
+                
+                {testResult && (
+                  <Alert variant={testResult.success ? "default" : "destructive"}>
+                    {testResult.success ? (
+                      <CheckCircle2 className="h-4 w-4" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4" />
+                    )}
+                    <AlertTitle>
+                      {testResult.success ? "Success" : "Error"}
+                    </AlertTitle>
+                    <AlertDescription>
+                      {testResult.message}
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
             </Card>
           </TabsContent>
         </Tabs>

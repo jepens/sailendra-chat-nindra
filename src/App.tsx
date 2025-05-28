@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,11 +12,14 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import ContactsPage from './pages/ContactsPage';
+import { ContactsProvider } from '@/contexts/ContactsContext';
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <ContactsProvider>
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
@@ -47,12 +49,18 @@ const App = () => (
                   <Settings />
                 </ProtectedRoute>
               } />
+                <Route path="/contacts" element={
+                  <ProtectedRoute>
+                    <ContactsPage />
+                  </ProtectedRoute>
+                } />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
+    </ContactsProvider>
   </QueryClientProvider>
 );
 

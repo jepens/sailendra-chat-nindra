@@ -1,28 +1,48 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, User } from "lucide-react";
+import { ChevronLeft, Loader2, User } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchChatSessions, fetchChatMessages, sendMessage } from "@/services/chatService";
 import { ChatMessage, ChatSession } from "@/types/chat";
 import SessionList from "@/components/chat/SessionList";
-import ChatMessageList from "@/components/chat/ChatMessageList";
+import { ChatMessageList } from "@/components/chat/ChatMessageList";
 import ChatInput from "@/components/chat/ChatInput";
 import { useAuth } from "@/contexts/AuthContext";
+import { ContactName } from "@/components/chat/ContactName";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 const Chat = () => {
   const { toast } = useToast();
   const { theme } = useTheme();
   const { user } = useAuth();
+  const isMobile = useMediaQuery("(max-width: 768px)");
   
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [showChat, setShowChat] = useState(!isMobile);
+  
+  // Reset showChat when screen size changes
+  useEffect(() => {
+    setShowChat(!isMobile);
+  }, [isMobile]);
+
+  // Handle session selection
+  const handleSessionSelect = (sessionId: string) => {
+    setSelectedSessionId(sessionId);
+    if (isMobile) {
+      setShowChat(true);
+    }
+  };
+  
+  // Handle back to sessions list on mobile
+  const handleBackToSessions = () => {
+    setShowChat(false);
+  };
   
   // Fetch sessions data
   const loadSessions = useCallback(async () => {
@@ -80,8 +100,6 @@ const Chat = () => {
     }
   }, [selectedSessionId, loadMessages]);
   
-  // Removed the polling interval for auto-refresh
-  
   // Handle sending a message
   const handleSendMessage = async (message: string) => {
     if (!selectedSessionId) return;
@@ -118,42 +136,63 @@ const Chat = () => {
       });
     }
   };
+
+  const selectedSession = sessions.find(s => s.session_id === selectedSessionId);
+  const chatTitle = selectedSession?.sender_name || 'Chat';
   
   return (
-    <DashboardLayout>
+    <DashboardLayout 
+      showBackButton={isMobile && showChat}
+      title={isMobile && showChat ? chatTitle : undefined}
+    >
       <div className="flex h-[calc(100vh-4rem)]">
         {/* Sessions List */}
+        <div className={`${showChat ? 'hidden md:flex' : 'flex'} w-full md:w-80 flex-col border-r dark:border-gray-700 bg-white dark:bg-gray-800`}>
         <SessionList 
           sessions={sessions}
           selectedSessionId={selectedSessionId}
-          onSelectSession={setSelectedSessionId}
+            onSelectSession={handleSessionSelect}
           isLoading={isLoadingSessions}
         />
+        </div>
         
         {/* Chat Area */}
-        <div className="hidden md:flex flex-col flex-1 h-full">
+        <div className={`${!showChat ? 'hidden md:flex' : 'flex'} flex-col flex-1 h-full`}>
           {selectedSessionId ? (
             <>
               {/* Chat Header */}
               <div className="p-4 border-b bg-white dark:bg-gray-800 dark:border-gray-700 flex items-center">
+                {isMobile && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleBackToSessions}
+                    className="mr-2"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                )}
                 <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300 font-medium">
                   <User className="h-5 w-5" />
                 </div>
                 <div className="ml-3">
-                  <div className="font-medium dark:text-white">
-                    {sessions.find(s => s.session_id === selectedSessionId)?.sender_name || selectedSessionId}
-                  </div>
+                  <ContactName 
+                    phoneNumber={selectedSession?.sender_name || selectedSessionId}
+                    className="font-medium dark:text-white"
+                  />
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {selectedSessionId}
+                    Online
                   </div>
                 </div>
               </div>
               
               {/* Messages */}
+              <div className="flex-1 overflow-hidden bg-gray-50 dark:bg-gray-900">
               <ChatMessageList 
                 messages={messages}
-                isLoading={isLoadingMessages}
+                  loading={isLoadingMessages}
               />
+              </div>
               
               {/* Message Input */}
               <ChatInput 
@@ -163,7 +202,7 @@ const Chat = () => {
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-              <div className="text-center">
+              <div className="text-center px-4">
                 <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

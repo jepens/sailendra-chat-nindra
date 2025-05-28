@@ -3,7 +3,7 @@ export interface ChatMessage {
   session_id: string;
   message: {
     content: string;
-    type: 'human' | 'ai' | 'agent';
+    type: 'human' | 'ai';
     sender_name?: string;
     timestamp?: string;
   };

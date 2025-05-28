@@ -1,42 +1,74 @@
-
-import { ChatMessage as ChatMessageType } from '@/types/chat';
-import { formatDistanceToNow } from 'date-fns';
+import { ContactName } from './ContactName';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
+import { User } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 interface ChatMessageProps {
-  message: ChatMessageType;
+  senderId: string;
+  message: string;
+  timestamp: string;
+  isOutgoing?: boolean;
 }
 
-const ChatMessage = ({ message }: ChatMessageProps) => {
-  const isOutgoing = message.message.type === 'human';
-  
-  // Process the message content to remove the first two lines if needed
-  const processContent = (content: string) => {
-    const lines = content.split('\n');
-    if (lines.length > 2) {
-      return lines.slice(2).join('\n');
-    }
-    return content;
-  };
-  
-  const content = processContent(message.message.content || '');
-  const timestamp = message.message.timestamp || message.created_at || new Date().toISOString();
-  
+export function ChatMessage({ 
+  senderId, 
+  message, 
+  timestamp, 
+  isOutgoing = false 
+}: ChatMessageProps) {
+  // Only log in development and at debug level
+  logger.debug('ChatMessage render:', { 
+    senderId, 
+    messageLength: message.length,
+    isOutgoing 
+  });
+
   return (
-    <div className={`flex ${isOutgoing ? 'justify-end' : 'justify-start'} mb-4`}>
-      <div 
-        className={`rounded-lg p-3 max-w-[80%] break-words ${
+    <div className={cn(
+      "flex gap-2 items-start px-2 md:px-4 py-2",
+      isOutgoing ? "flex-row-reverse" : "flex-row"
+    )}>
+      <Avatar className="w-8 h-8 shrink-0">
+        <AvatarFallback className="bg-primary text-primary-foreground">
+          {senderId === 'AI' ? (
+            'AI'
+          ) : (
+            senderId.slice(0, 2).toUpperCase()
+          )}
+        </AvatarFallback>
+      </Avatar>
+      <div className={cn(
+        "flex flex-col max-w-[75%] md:max-w-[65%]",
+        isOutgoing ? "items-end" : "items-start"
+      )}>
+        <span className="text-sm font-medium text-muted-foreground mb-1">
+          {senderId === 'AI' ? (
+            'AI'
+          ) : (
+            <ContactName 
+              phoneNumber={senderId} 
+              className="text-sm font-medium text-muted-foreground"
+            />
+          )}
+        </span>
+        <div className={cn(
+          "rounded-lg px-3 py-2 break-words",
           isOutgoing 
-            ? 'bg-blue-500 text-white' 
-            : 'bg-gray-200 dark:bg-gray-700 dark:text-white'
-        }`}
-      >
-        <div className="whitespace-pre-wrap">{content}</div>
-        <div className="text-xs mt-1 flex justify-end opacity-70">
-          {formatDistanceToNow(new Date(timestamp), { addSuffix: true })}
+            ? "bg-primary text-primary-foreground rounded-tr-none"
+            : senderId === 'AI'
+              ? "bg-muted rounded-tl-none"
+              : "bg-gray-100 dark:bg-gray-800 rounded-tl-none"
+        )}>
+          {message}
         </div>
+        <span className="text-xs text-muted-foreground mt-1">
+          {new Date(timestamp).toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit'
+          })}
+        </span>
       </div>
     </div>
   );
-};
-
-export default ChatMessage;
+}

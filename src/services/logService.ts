@@ -88,6 +88,7 @@ export const fetchLogs = async (
           messageDirection = 'incoming';
           status = 'read';
           break;
+        case 'agent':
         case 'ai':
           messageDirection = 'outgoing';
           status = 'delivered';
@@ -95,6 +96,11 @@ export const fetchLogs = async (
         default:
           messageDirection = 'incoming';
           status = 'read';
+      }
+
+      // Normalize message type
+      if (messageObj.type === 'agent') {
+        messageObj.type = 'ai';
       }
 
       // Filter by direction if specified

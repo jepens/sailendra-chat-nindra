@@ -1,33 +1,53 @@
 import { supabase } from '@/integrations/supabase/client';
 
-export const getSetting = async (key: string): Promise<string | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('app_settings')
-      .select('value')
-      .eq('key', key)
-      .single();
+export const SETTINGS_KEYS = {
+  WEBHOOK_URL: 'webhook_url'
+} as const;
 
-    if (error) throw error;
-    return data?.value || null;
-  } catch (error) {
-    console.error('Failed to get setting:', error);
-    return null;
-  }
+export type AppSetting = {
+  id: number;
+  key: string;
+  value: string;
+  created_at: string;
+  updated_at: string;
 };
 
-export const setSetting = async (key: string, value: string): Promise<boolean> => {
-  try {
-    const { error } = await supabase
-      .from('app_settings')
-      .upsert({ key, value }, { onConflict: 'key' });
+/**
+ * Fetches a setting by key from the app_settings table
+ */
+export const getSetting = async (key: string): Promise<string | null> => {
+  const { data, error } = await supabase
+    .from('app_settings')
+    .select('value')
+    .eq('key', key)
+    .single();
+  
+  if (error) {
+    console.error('Error fetching setting:', error);
+    return null;
+  }
+  
+  return data?.value || null;
+};
 
-    if (error) throw error;
-    return true;
-  } catch (error) {
-    console.error('Failed to set setting:', error);
+/**
+ * Updates a setting in the app_settings table
+ */
+export const updateSetting = async (key: string, value: string): Promise<boolean> => {
+  const { error } = await supabase
+    .from('app_settings')
+    .update({ 
+      value,
+      updated_at: new Date().toISOString()
+    })
+    .eq('key', key);
+  
+  if (error) {
+    console.error('Error updating setting:', error);
     return false;
   }
+  
+  return true;
 };
 
 /**
@@ -37,14 +57,18 @@ export const testWebhook = async (url: string): Promise<{ success: boolean; mess
   try {
     const timestamp = new Date().toISOString();
     
+    // Create message object matching the format in chatService
     const messageObject = {
       content: "This is a test message from the AI chatbot system",
       type: "ai" as const,
+      timestamp: new Date().toISOString()
     };
     
+    // Create test payload based on the format used in chatService.ts
     const testPayload = {
       session_id: "6281234567890",
       message: messageObject,
+      sender_type: "agent",
       timestamp: timestamp
     };
     

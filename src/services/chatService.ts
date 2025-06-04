@@ -15,28 +15,12 @@ type MessageObject = {
 const parseMessage = (message: any): MessageObject => {
   if (typeof message === 'string') {
     try {
-      const parsed = JSON.parse(message);
-      // Convert 'agent' type to 'ai'
-      if (parsed.type === 'agent') {
-        parsed.type = 'ai';
-      }
-      return parsed as MessageObject;
+      return JSON.parse(message) as MessageObject;
     } catch (e) {
       logger.warn('Failed to parse message as JSON:', { message });
       return { content: message, type: 'ai' };
     }
   }
-  
-  // Handle case where message is already an object
-  if (message.type === 'agent') {
-    message.type = 'ai';
-  }
-  
-  // Ensure type is either 'human' or 'ai'
-  if (message.type !== 'human' && message.type !== 'ai') {
-    message.type = 'ai'; // Default to 'ai' for unknown types
-  }
-  
   return message as MessageObject;
 };
 

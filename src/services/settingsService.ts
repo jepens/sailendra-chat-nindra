@@ -59,16 +59,14 @@ export const testWebhook = async (url: string): Promise<{ success: boolean; mess
     
     // Create message object matching the format in chatService
     const messageObject = {
-      content: "This is a test message from the AI chatbot system",
+      content: "This is a test message from the WhatsApp chatbot system",
       type: "ai" as const,
-      timestamp: new Date().toISOString()
     };
     
     // Create test payload based on the format used in chatService.ts
     const testPayload = {
       session_id: "6281234567890",
       message: messageObject,
-      sender_type: "agent",
       timestamp: timestamp
     };
     

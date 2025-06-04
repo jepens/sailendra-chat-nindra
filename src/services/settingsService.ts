@@ -94,3 +94,6 @@ export const testWebhook = async (url: string): Promise<{ success: boolean; mess
     };
   }
 };
+
+// Add alias export for backward compatibility
+export const setSetting = updateSetting;

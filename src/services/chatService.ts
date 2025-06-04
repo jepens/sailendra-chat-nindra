@@ -15,11 +15,22 @@ type MessageObject = {
 const parseMessage = (message: any): MessageObject => {
   if (typeof message === 'string') {
     try {
-      return JSON.parse(message) as MessageObject;
+      const parsed = JSON.parse(message) as MessageObject;
+      // Validate and normalize message type
+      if (parsed.type && parsed.type !== 'human' && parsed.type !== 'ai') {
+        parsed.type = 'ai'; // Default to 'ai' for invalid types
+        logger.warn('Invalid message type normalized:', { originalType: parsed.type });
+      }
+      return parsed;
     } catch (e) {
       logger.warn('Failed to parse message as JSON:', { message });
       return { content: message, type: 'ai' };
     }
+  }
+  // Validate and normalize message type for object inputs
+  if (message.type && message.type !== 'human' && message.type !== 'ai') {
+    message.type = 'ai'; // Default to 'ai' for invalid types
+    logger.warn('Invalid message type normalized:', { originalType: message.type });
   }
   return message as MessageObject;
 };

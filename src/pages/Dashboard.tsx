@@ -1,15 +1,85 @@
-
-import React from "react";
+import React, { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { fetchDashboardStats, getStatsComparison, DashboardStats } from "@/services/dashboardService";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const Dashboard = () => {
-  // Mock data
-  const stats = [
-    { title: "Total Conversations", value: "245", trend: "up", percent: "12%" },
-    { title: "Active Today", value: "28", trend: "up", percent: "5%" },
-    { title: "Messages Received", value: "1,024", trend: "up", percent: "18%" },
-    { title: "Response Rate", value: "94%", trend: "down", percent: "2%" },
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [comparison, setComparison] = useState<{
+    conversations: number;
+    active: number;
+    messages: number;
+    response: number;
+  } | null>(null);
+
+  const loadDashboardData = async () => {
+    try {
+      const [statsData, comparisonData] = await Promise.all([
+        fetchDashboardStats(),
+        getStatsComparison()
+      ]);
+      
+      setStats(statsData);
+      setComparison(comparisonData);
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard statistics",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDashboardData();
+
+    // Set up polling every 5 minutes
+    const interval = setInterval(loadDashboardData, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (loading || !stats || !comparison) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+          <Loader2 className="h-8 w-8 animate-spin text-sailendra-500" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const dashboardStats = [
+    {
+      title: "Total Conversations",
+      value: stats.totalConversations.toString(),
+      trend: comparison.conversations >= 0 ? "up" : "down",
+      percent: `${Math.abs(comparison.conversations)}%`
+    },
+    {
+      title: "Active Today",
+      value: stats.activeToday.toString(),
+      trend: comparison.active >= 0 ? "up" : "down",
+      percent: `${Math.abs(comparison.active)}%`
+    },
+    {
+      title: "Messages Received",
+      value: stats.messagesReceived.toString(),
+      trend: comparison.messages >= 0 ? "up" : "down",
+      percent: `${Math.abs(comparison.messages)}%`
+    },
+    {
+      title: "Response Rate",
+      value: `${stats.responseRate}%`,
+      trend: comparison.response >= 0 ? "up" : "down",
+      percent: `${Math.abs(comparison.response)}%`
+    }
   ];
 
   return (
@@ -18,7 +88,7 @@ const Dashboard = () => {
         <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, i) => (
+          {dashboardStats.map((stat, i) => (
             <Card key={i}>
               <CardHeader className="pb-2">
                 <CardDescription>{stat.title}</CardDescription>

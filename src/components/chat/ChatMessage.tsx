@@ -1,28 +1,46 @@
 import { ContactName } from './ContactName';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { User } from 'lucide-react';
+import { User, MessageSquare } from 'lucide-react';
 import { logger } from '@/utils/logger';
+import { Badge } from '@/components/ui/badge';
+import { MessagePlatform } from '@/types/chat';
 
 interface ChatMessageProps {
   senderId: string;
   message: string;
   timestamp: string;
   isOutgoing?: boolean;
+  trigger?: MessagePlatform;
 }
 
 export function ChatMessage({ 
   senderId, 
   message, 
   timestamp, 
-  isOutgoing = false 
+  isOutgoing = false,
+  trigger
 }: ChatMessageProps) {
   // Only log in development and at debug level
   logger.debug('ChatMessage render:', { 
     senderId, 
     messageLength: message.length,
-    isOutgoing 
+    isOutgoing,
+    trigger
   });
+
+  const getPlatformColor = (platform?: MessagePlatform) => {
+    switch (platform) {
+      case 'whatsapp':
+        return 'bg-green-500';
+      case 'instagram':
+        return 'bg-pink-500';
+      case 'facebook':
+        return 'bg-blue-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
 
   return (
     <div className={cn(
@@ -30,11 +48,14 @@ export function ChatMessage({
       isOutgoing ? "flex-row-reverse" : "flex-row"
     )}>
       <Avatar className="w-8 h-8 shrink-0">
-        <AvatarFallback className="bg-primary text-primary-foreground">
+        <AvatarFallback className={cn(
+          "text-primary-foreground",
+          trigger ? getPlatformColor(trigger) : "bg-primary"
+        )}>
           {senderId === 'AI' ? (
             'AI'
           ) : (
-            senderId.slice(0, 2).toUpperCase()
+            <MessageSquare className="h-4 w-4" />
           )}
         </AvatarFallback>
       </Avatar>
@@ -42,16 +63,23 @@ export function ChatMessage({
         "flex flex-col max-w-[75%] md:max-w-[65%]",
         isOutgoing ? "items-end" : "items-start"
       )}>
-        <span className="text-sm font-medium text-muted-foreground mb-1">
-          {senderId === 'AI' ? (
-            'AI'
-          ) : (
-            <ContactName 
-              phoneNumber={senderId} 
-              className="text-sm font-medium text-muted-foreground"
-            />
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-sm font-medium text-muted-foreground">
+            {senderId === 'AI' ? (
+              'AI'
+            ) : (
+              <ContactName 
+                phoneNumber={senderId} 
+                className="text-sm font-medium text-muted-foreground"
+              />
+            )}
+          </span>
+          {trigger && (
+            <Badge variant="secondary" className="text-xs">
+              {trigger}
+            </Badge>
           )}
-        </span>
+        </div>
         <div className={cn(
           "rounded-lg px-3 py-2 break-words",
           isOutgoing 

@@ -1,11 +1,14 @@
+export type MessagePlatform = 'whatsapp' | 'instagram' | 'facebook';
+
 export interface ChatMessage {
-  id: number;
+  id: string;
   session_id: string;
   message: {
     content: string;
-    type: 'human' | 'ai';
+    type?: 'human' | 'ai';
     sender_name?: string;
     timestamp?: string;
+    trigger?: MessagePlatform;
   };
   created_at: string;
 }

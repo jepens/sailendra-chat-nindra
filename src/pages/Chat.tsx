@@ -22,8 +22,11 @@ const Chat = () => {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [showChat, setShowChat] = useState(!isMobile);
   
   // Reset showChat when screen size changes
@@ -67,13 +70,24 @@ const Chat = () => {
   }, [selectedSessionId, toast]);
   
   // Fetch messages for selected session
-  const loadMessages = useCallback(async () => {
+  const loadMessages = useCallback(async (page: number = 1) => {
     if (!selectedSessionId) return;
     
-    setIsLoadingMessages(true);
+    const isInitialLoad = page === 1;
+    if (isInitialLoad) {
+      setIsLoadingMessages(true);
+    } else {
+      setIsLoadingMore(true);
+    }
+
     try {
-      const fetchedMessages = await fetchChatMessages(selectedSessionId);
-      setMessages(fetchedMessages);
+      const { messages: fetchedMessages, hasMore } = await fetchChatMessages(selectedSessionId, page);
+      
+      setMessages(prev => 
+        page === 1 ? fetchedMessages : [...prev, ...fetchedMessages]
+      );
+      setHasMoreMessages(hasMore);
+      setCurrentPage(page);
     } catch (error) {
       console.error("Error fetching messages:", error);
       toast({
@@ -82,9 +96,20 @@ const Chat = () => {
         variant: "destructive"
       });
     } finally {
-      setIsLoadingMessages(false);
+      if (isInitialLoad) {
+        setIsLoadingMessages(false);
+      } else {
+        setIsLoadingMore(false);
+      }
     }
   }, [selectedSessionId, toast]);
+  
+  // Load more messages
+  const handleLoadMore = useCallback(() => {
+    if (!isLoadingMore && hasMoreMessages) {
+      loadMessages(currentPage + 1);
+    }
+  }, [currentPage, hasMoreMessages, isLoadingMore, loadMessages]);
   
   // Initial data load
   useEffect(() => {
@@ -96,7 +121,9 @@ const Chat = () => {
   // Load messages when session changes
   useEffect(() => {
     if (selectedSessionId) {
-      loadMessages();
+      setCurrentPage(1);
+      setHasMoreMessages(true);
+      loadMessages(1);
     }
   }, [selectedSessionId, loadMessages]);
   
@@ -188,10 +215,13 @@ const Chat = () => {
               
               {/* Messages */}
               <div className="flex-1 overflow-hidden bg-gray-50 dark:bg-gray-900">
-              <ChatMessageList 
-                messages={messages}
+                <ChatMessageList 
+                  messages={messages}
                   loading={isLoadingMessages}
-              />
+                  isLoadingMore={isLoadingMore}
+                  hasMore={hasMoreMessages}
+                  onLoadMore={handleLoadMore}
+                />
               </div>
               
               {/* Message Input */}

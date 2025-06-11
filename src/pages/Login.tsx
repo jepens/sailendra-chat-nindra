@@ -49,7 +49,7 @@ const Login = () => {
                 <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"></path>
               </svg>
             </div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">Sailendra ChatBot</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">Nindra Chatbot</div>
           </div>
         </div>
         

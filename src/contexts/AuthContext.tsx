@@ -29,7 +29,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (event === 'SIGNED_IN') {
           toast.success('Login successful');
-          navigate('/dashboard');
+          // Only redirect to dashboard if not on calendar pages
+          // This prevents disrupting OAuth callback flow
+          const currentPath = window.location.pathname;
+          if (!currentPath.startsWith('/calendar')) {
+            navigate('/dashboard');
+          }
         } else if (event === 'SIGNED_OUT') {
           navigate('/login');
           toast.info('Logged out successfully');

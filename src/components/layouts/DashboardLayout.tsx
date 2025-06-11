@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
-import { LogOut, LayoutDashboard, MessageSquare, Settings, FileText, Users, Menu, ChevronLeft } from 'lucide-react';
+import { LogOut, LayoutDashboard, MessageSquare, Settings, FileText, Users, Menu, ChevronLeft, Calendar, BarChart3 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
@@ -26,6 +26,8 @@ const DashboardLayout = ({ children, showBackButton, title }: DashboardLayoutPro
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: MessageSquare, label: 'Chat', path: '/chat' },
     { icon: Users, label: 'Contacts', path: '/contacts' },
+    { icon: Calendar, label: 'Calendar', path: '/calendar' },
+    { icon: BarChart3, label: 'Sentiment Analysis', path: '/sentiment' },
     { icon: FileText, label: 'Logs', path: '/logs' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
@@ -45,13 +47,13 @@ const DashboardLayout = ({ children, showBackButton, title }: DashboardLayoutPro
               <ChevronLeft className="h-5 w-5" />
             </Button>
           ) : null}
-          <img src="/logo.png" alt="Sailendra Logo" className="h-8 w-8 md:h-10 md:w-10" />
+          <img src="/logo.png" alt="Nindra Logo" className="h-8 w-8 md:h-10 md:w-10" />
           <span className="font-semibold text-base md:text-lg dark:text-white hidden md:inline">
-            {title || "Sailendra ChatBot"}
+            {title || "Nindra Chatbot System"}
           </span>
           {/* Mobile Title */}
           <span className="font-semibold text-base dark:text-white md:hidden">
-            {title || "Sailendra"}
+            {title || "Nindra"}
           </span>
         </div>
         <div className="flex items-center gap-2 md:gap-3">
@@ -133,7 +135,7 @@ const DashboardLayout = ({ children, showBackButton, title }: DashboardLayoutPro
       {/* Footer */}
       <footer className="h-12 bg-white dark:bg-gray-800 border-t dark:border-gray-700 flex items-center justify-center px-4 md:px-6">
         <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300 text-center">
-          © 2025 Sailendra Organizer, Created by Abdul Muthalib
+          © 2025 Nindra Chatbot System, Created by Abdul Muthalib
         </p>
       </footer>
     </div>

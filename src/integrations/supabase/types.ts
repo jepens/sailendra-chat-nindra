@@ -75,6 +75,129 @@ export type Database = {
         }
         Relationships: []
       }
+      sentiment_analysis: {
+        Row: {
+          id: string
+          message_id: number
+          session_id: string
+          message_content: string
+          sentiment: "positive" | "negative" | "neutral"
+          confidence_score: number
+          emotions: Json | null
+          keywords: string[] | null
+          analysis_provider: "openai" | "local" | "hybrid" | null
+          openai_raw_response: Json | null
+          processing_time_ms: number | null
+          tokens_used: number | null
+          analyzed_at: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          message_id: number
+          session_id: string
+          message_content: string
+          sentiment: "positive" | "negative" | "neutral"
+          confidence_score: number
+          emotions?: Json | null
+          keywords?: string[] | null
+          analysis_provider?: "openai" | "local" | "hybrid" | null
+          openai_raw_response?: Json | null
+          processing_time_ms?: number | null
+          tokens_used?: number | null
+          analyzed_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          message_id?: number
+          session_id?: string
+          message_content?: string
+          sentiment?: "positive" | "negative" | "neutral"
+          confidence_score?: number
+          emotions?: Json | null
+          keywords?: string[] | null
+          analysis_provider?: "openai" | "local" | "hybrid" | null
+          openai_raw_response?: Json | null
+          processing_time_ms?: number | null
+          tokens_used?: number | null
+          analyzed_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      session_sentiment_summary: {
+        Row: {
+          id: string
+          session_id: string
+          total_human_messages: number | null
+          positive_count: number | null
+          negative_count: number | null
+          neutral_count: number | null
+          positive_percentage: number | null
+          negative_percentage: number | null
+          neutral_percentage: number | null
+          avg_confidence: number | null
+          dominant_sentiment: "positive" | "negative" | "neutral" | null
+          dominant_emotions: Json | null
+          satisfaction_score: number | null
+          conversation_quality: string | null
+          first_message_at: string | null
+          last_message_at: string | null
+          last_analyzed_at: string | null
+          total_tokens_used: number | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          session_id: string
+          total_human_messages?: number | null
+          positive_count?: number | null
+          negative_count?: number | null
+          neutral_count?: number | null
+          positive_percentage?: number | null
+          negative_percentage?: number | null
+          neutral_percentage?: number | null
+          avg_confidence?: number | null
+          dominant_sentiment?: "positive" | "negative" | "neutral" | null
+          dominant_emotions?: Json | null
+          satisfaction_score?: number | null
+          conversation_quality?: string | null
+          first_message_at?: string | null
+          last_message_at?: string | null
+          last_analyzed_at?: string | null
+          total_tokens_used?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          session_id?: string
+          total_human_messages?: number | null
+          positive_count?: number | null
+          negative_count?: number | null
+          neutral_count?: number | null
+          positive_percentage?: number | null
+          negative_percentage?: number | null
+          neutral_percentage?: number | null
+          avg_confidence?: number | null
+          dominant_sentiment?: "positive" | "negative" | "neutral" | null
+          dominant_emotions?: Json | null
+          satisfaction_score?: number | null
+          conversation_quality?: string | null
+          first_message_at?: string | null
+          last_message_at?: string | null
+          last_analyzed_at?: string | null
+          total_tokens_used?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

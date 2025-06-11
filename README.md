@@ -1,10 +1,13 @@
-# Sailendra Chat Nexus
+# Nindra Chatbot System
 
 A modern chat application built with React, TypeScript, and Supabase.
 
 ## Features
 
 - Real-time chat functionality
+- Google Calendar integration for viewing schedules
+- Contacts management
+- Activity logs tracking
 - Modern UI with Shadcn/UI components
 - Dark/Light theme support
 - Responsive design
@@ -31,8 +34,8 @@ A modern chat application built with React, TypeScript, and Supabase.
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/sailendra-chat-nexus.git
-   cd sailendra-chat-nexus
+   git clone https://github.com/your-username/nindra-chatboy-system.git
+   cd nindra-chatboy-system
    ```
 
 2. Install dependencies:
@@ -44,7 +47,13 @@ A modern chat application built with React, TypeScript, and Supabase.
    ```env
    VITE_SUPABASE_URL=your_supabase_url
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   
+   # Google Calendar Integration (Optional)
+   VITE_GOOGLE_CALENDAR_API_KEY=your_google_calendar_api_key
+   VITE_GOOGLE_CALENDAR_CLIENT_ID=your_google_client_id
    ```
+
+   For Google Calendar setup, see [CALENDAR_SETUP.md](./CALENDAR_SETUP.md)
 
 ## Development
 
@@ -72,9 +81,13 @@ The application will be available at `http://localhost:8080`
 ## Project Structure
 
 ```
-sailendra-chat-nexus/
+nindra-chatboy-system/
 ├── src/
 │   ├── components/     # React components
+│   │   ├── calendar/  # Calendar-specific components
+│   │   ├── chat/      # Chat-related components
+│   │   ├── layouts/   # Layout components
+│   │   └── ui/        # Reusable UI components
 │   ├── contexts/       # React contexts
 │   ├── hooks/         # Custom hooks
 │   ├── lib/           # Utility functions
@@ -99,4 +112,4 @@ This project is licensed under the MIT License.
 
 ## Credits
 
-Created by Bedul Tampan © 2025 Sailendra Organizer
+Created by Bedul Tampan © 2025 Nindra Chatbot System

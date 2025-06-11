@@ -4,7 +4,10 @@ import { cn } from '@/lib/utils';
 import { User, MessageSquare } from 'lucide-react';
 import { logger } from '@/utils/logger';
 import { Badge } from '@/components/ui/badge';
-import { MessagePlatform } from '@/types/chat';
+import { MessagePlatform, ChatMessage as ChatMessageType } from '@/types/chat';
+import { SentimentBadge } from '@/components/sentiment/SentimentBadge';
+import { useMessageSentiment } from '@/hooks/useSentiment';
+import { useEffect } from 'react';
 
 interface ChatMessageProps {
   senderId: string;
@@ -12,6 +15,10 @@ interface ChatMessageProps {
   timestamp: string;
   isOutgoing?: boolean;
   trigger?: MessagePlatform;
+  messageId?: string;
+  sessionId?: string;
+  enableSentiment?: boolean;
+  chatMessage?: ChatMessageType;
 }
 
 export function ChatMessage({ 
@@ -19,15 +26,45 @@ export function ChatMessage({
   message, 
   timestamp, 
   isOutgoing = false,
-  trigger
+  trigger,
+  messageId,
+  sessionId,
+  enableSentiment = true,
+  chatMessage
 }: ChatMessageProps) {
   // Only log in development and at debug level
   logger.debug('ChatMessage render:', { 
     senderId, 
     messageLength: message.length,
     isOutgoing,
-    trigger
+    trigger,
+    enableSentiment
   });
+
+  // Sentiment analysis hook
+  const { 
+    sentiment, 
+    loading: sentimentLoading, 
+    analyze: analyzeSentiment,
+    hasSentiment
+  } = useMessageSentiment(
+    messageId || `${senderId}-${timestamp}`, 
+    sessionId || 'default', 
+    message
+  );
+
+  // Auto-analyze sentiment for non-AI messages
+  useEffect(() => {
+    if (enableSentiment && 
+        senderId !== 'AI' && 
+        !isOutgoing && 
+        messageId && 
+        sessionId && 
+        !hasSentiment && 
+        !sentimentLoading) {
+      analyzeSentiment();
+    }
+  }, [enableSentiment, senderId, isOutgoing, messageId, sessionId, hasSentiment, sentimentLoading, analyzeSentiment]);
 
   const getPlatformColor = (platform?: MessagePlatform) => {
     switch (platform) {
@@ -41,6 +78,14 @@ export function ChatMessage({
         return 'bg-gray-500';
     }
   };
+
+  const shouldShowSentiment = enableSentiment && 
+    senderId !== 'AI' && 
+    !isOutgoing && 
+    (sentiment || sentimentLoading || chatMessage?.sentiment);
+
+  // Use existing sentiment from chatMessage if available
+  const displaySentiment = chatMessage?.sentiment || sentiment;
 
   return (
     <div className={cn(
@@ -79,6 +124,18 @@ export function ChatMessage({
               {trigger}
             </Badge>
           )}
+          {shouldShowSentiment && (
+            <SentimentBadge
+              sentiment={displaySentiment?.sentiment}
+              confidence={displaySentiment?.confidence}
+              emotions={displaySentiment?.emotions}
+              size="sm"
+              showConfidence={false}
+              showEmotions={true}
+              loading={sentimentLoading || chatMessage?.sentiment_loading}
+              onClick={!hasSentiment && !sentimentLoading ? analyzeSentiment : undefined}
+            />
+          )}
         </div>
         <div className={cn(
           "rounded-lg px-3 py-2 break-words",
@@ -90,12 +147,28 @@ export function ChatMessage({
         )}>
           {message}
         </div>
-        <span className="text-xs text-muted-foreground mt-1">
-          {new Date(timestamp).toLocaleTimeString([], { 
-            hour: '2-digit', 
-            minute: '2-digit'
-          })}
-        </span>
+        <div className="flex items-center gap-2 mt-1">
+          <span className="text-xs text-muted-foreground">
+            {new Date(timestamp).toLocaleTimeString([], { 
+              hour: '2-digit', 
+              minute: '2-digit'
+            })}
+          </span>
+          {shouldShowSentiment && displaySentiment && displaySentiment.keywords && displaySentiment.keywords.length > 0 && (
+            <div className="flex items-center gap-1">
+              {displaySentiment.keywords.slice(0, 2).map((keyword, index) => (
+                <Badge key={index} variant="outline" className="text-xs px-1 py-0">
+                  {keyword}
+                </Badge>
+              ))}
+              {displaySentiment.keywords.length > 2 && (
+                <Badge variant="outline" className="text-xs px-1 py-0">
+                  +{displaySentiment.keywords.length - 2}
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

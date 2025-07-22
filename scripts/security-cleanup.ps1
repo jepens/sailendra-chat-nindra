@@ -8,7 +8,7 @@ Write-Host "🔍 Scanning for potential credential leaks..." -ForegroundColor Ye
 # Check for JWT tokens
 Write-Host "Checking for JWT tokens..." -ForegroundColor Cyan
 $jwtPattern = "eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+"
-$jwtFiles = Get-ChildItem -Recurse -File -Exclude "node_modules", ".git", "*.lock" | Select-String -Pattern $jwtPattern -List
+$jwtFiles = Get-ChildItem -Recurse -File | Where-Object { $_.FullName -notlike "*node_modules*" -and $_.FullName -notlike "*.git*" -and $_.Name -notlike "*.lock" } | Select-String -Pattern $jwtPattern -List
 if ($jwtFiles) {
     Write-Host "❌ Found potential JWT tokens!" -ForegroundColor Red
     $jwtFiles | ForEach-Object { Write-Host "  - $($_.Filename):$($_.LineNumber)" -ForegroundColor Red }
@@ -19,7 +19,7 @@ if ($jwtFiles) {
 # Check for API keys
 Write-Host "Checking for API keys..." -ForegroundColor Cyan
 $apiKeyPattern = "sk-[A-Za-z0-9]+"
-$apiKeyFiles = Get-ChildItem -Recurse -File -Exclude "node_modules", ".git", "*.lock" | Select-String -Pattern $apiKeyPattern -List
+$apiKeyFiles = Get-ChildItem -Recurse -File | Where-Object { $_.FullName -notlike "*node_modules*" -and $_.FullName -notlike "*.git*" -and $_.Name -notlike "*.lock" } | Select-String -Pattern $apiKeyPattern -List
 if ($apiKeyFiles) {
     Write-Host "❌ Found potential OpenAI API keys!" -ForegroundColor Red
     $apiKeyFiles | ForEach-Object { Write-Host "  - $($_.Filename):$($_.LineNumber)" -ForegroundColor Red }
@@ -30,7 +30,7 @@ if ($apiKeyFiles) {
 # Check for Google API keys
 Write-Host "Checking for Google API keys..." -ForegroundColor Cyan
 $googleKeyPattern = "AIza[A-Za-z0-9_-]+"
-$googleKeyFiles = Get-ChildItem -Recurse -File -Exclude "node_modules", ".git", "*.lock" | Select-String -Pattern $googleKeyPattern -List
+$googleKeyFiles = Get-ChildItem -Recurse -File | Where-Object { $_.FullName -notlike "*node_modules*" -and $_.FullName -notlike "*.git*" -and $_.Name -notlike "*.lock" } | Select-String -Pattern $googleKeyPattern -List
 if ($googleKeyFiles) {
     Write-Host "❌ Found potential Google API keys!" -ForegroundColor Red
     $googleKeyFiles | ForEach-Object { Write-Host "  - $($_.Filename):$($_.LineNumber)" -ForegroundColor Red }
@@ -38,9 +38,20 @@ if ($googleKeyFiles) {
     Write-Host "✅ No Google API keys found" -ForegroundColor Green
 }
 
+# Check for Airtable API keys
+Write-Host "Checking for Airtable API keys..." -ForegroundColor Cyan
+$airtableKeyPattern = "pat[A-Za-z0-9_-]+"
+$airtableKeyFiles = Get-ChildItem -Recurse -File | Where-Object { $_.FullName -notlike "*node_modules*" -and $_.FullName -notlike "*.git*" -and $_.Name -notlike "*.lock" } | Select-String -Pattern $airtableKeyPattern -List
+if ($airtableKeyFiles) {
+    Write-Host "❌ Found potential Airtable API keys!" -ForegroundColor Red
+    $airtableKeyFiles | ForEach-Object { Write-Host "  - $($_.Filename):$($_.LineNumber)" -ForegroundColor Red }
+} else {
+    Write-Host "✅ No Airtable API keys found" -ForegroundColor Green
+}
+
 # Check for .env files
 Write-Host "Checking for .env files..." -ForegroundColor Cyan
-$envFiles = Get-ChildItem -Recurse -Name ".env*" | Where-Object { $_.FullName -notlike "*node_modules*" -and $_.FullName -notlike "*.git*" }
+$envFiles = Get-ChildItem -Recurse -Name ".env*" | Where-Object { $_ -notlike "*node_modules*" -and $_ -notlike "*.git*" }
 if ($envFiles) {
     Write-Host "❌ Found .env files that should be removed!" -ForegroundColor Red
     $envFiles | ForEach-Object { Write-Host "  - $_" -ForegroundColor Red }
@@ -50,7 +61,7 @@ if ($envFiles) {
 
 # Check git history for credentials
 Write-Host "Checking git history for credentials..." -ForegroundColor Cyan
-$gitHistory = git log --all --full-history --grep="eyJ" --grep="sk-" --grep="AIza" --grep="api_key" --grep="API_KEY" 2>$null
+$gitHistory = git log --all --full-history --grep="eyJ" --grep="sk-" --grep="AIza" --grep="pat" --grep="api_key" --grep="API_KEY" 2>$null
 if ($gitHistory) {
     Write-Host "❌ Found potential credentials in git history!" -ForegroundColor Red
 } else {

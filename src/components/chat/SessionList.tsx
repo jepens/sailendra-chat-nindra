@@ -19,13 +19,17 @@ export default function SessionList({
 }: SessionListProps) {
   // Helper function to extract phone number from session name/id
   const extractPhoneNumber = (text: string): string => {
+    if (!text || typeof text !== 'string') {
+      return '';
+    }
+    
     // Try to extract number from "whatsapp NUMBER" format
     const whatsappMatch = text.match(/whatsapp\s+(\d+)/i);
     if (whatsappMatch) {
-      return whatsappMatch[1];
+      return whatsappMatch[1] || '';
     }
     // If no match, return the original text
-    return text;
+    return text || '';
   };
 
   if (isLoading) {

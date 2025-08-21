@@ -54,20 +54,29 @@ export function ChatMessageList({
 
   // Helper function to extract phone number from message content
   const extractPhoneNumber = (content: string): string => {
+    if (!content || typeof content !== 'string') {
+      return '';
+    }
+    
     const lines = content.split('\n');
     if (lines.length >= 2 && lines[0].toLowerCase() === 'whatsapp') {
-      return lines[1];
+      const phoneNumber = lines[1];
+      return phoneNumber && typeof phoneNumber === 'string' ? phoneNumber : '';
     }
-    return content;
+    return content || '';
   };
 
   // Helper function to extract actual message content
   const extractMessageContent = (content: string): string => {
+    if (!content || typeof content !== 'string') {
+      return '';
+    }
+    
     const lines = content.split('\n');
     if (lines.length >= 3 && lines[0].toLowerCase() === 'whatsapp') {
-      return lines.slice(2).join('\n');
+      return lines.slice(2).join('\n') || '';
     }
-    return content;
+    return content || '';
   };
 
   if (loading) {

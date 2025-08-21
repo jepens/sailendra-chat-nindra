@@ -174,7 +174,7 @@ const Logs = () => {
                         </td>
                         <td className="px-4 py-3">
                           <ContactName 
-                            phoneNumber={log.direction === "incoming" ? log.fromNumber : log.toNumber}
+                            phoneNumber={log.direction === "incoming" ? (log.fromNumber || 'Unknown') : (log.toNumber || 'Unknown')}
                             className="font-medium text-gray-900 dark:text-gray-100"
                           />
                         </td>

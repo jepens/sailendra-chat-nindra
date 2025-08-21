@@ -204,7 +204,7 @@ const Chat = () => {
                 </div>
                 <div className="ml-3">
                   <ContactName 
-                    phoneNumber={selectedSession?.sender_name || selectedSessionId}
+                    phoneNumber={selectedSession?.sender_name || selectedSessionId || 'Unknown'}
                     className="font-medium dark:text-white"
                   />
                   <div className="text-xs text-gray-500 dark:text-gray-400">

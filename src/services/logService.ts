@@ -104,9 +104,9 @@ export const fetchLogs = async (
       
       return {
         id: item.id.toString(),
-        waId: item.session_id,
-        fromNumber: messageDirection === 'incoming' ? item.session_id : 'AI',
-        toNumber: messageDirection === 'outgoing' ? item.session_id : 'AI',
+        waId: item.session_id || '',
+        fromNumber: messageDirection === 'incoming' ? (item.session_id || 'Unknown') : 'AI',
+        toNumber: messageDirection === 'outgoing' ? (item.session_id || 'Unknown') : 'AI',
         message: messageObj.content || '',
         messageType: messageObj.type || 'text',
         direction: messageDirection,

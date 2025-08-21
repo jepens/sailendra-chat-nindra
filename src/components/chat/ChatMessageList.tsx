@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
 import { ChatMessage } from './ChatMessage';
+import { DateSeparator } from './DateSeparator';
 import { Loader2 } from 'lucide-react';
 
 interface ChatMessageListProps {
@@ -79,6 +80,32 @@ export function ChatMessageList({
     return content || '';
   };
 
+  // Helper function to check if two dates are on the same day
+  const isSameDay = (date1: Date, date2: Date): boolean => {
+    return date1.toDateString() === date2.toDateString();
+  };
+
+  // Helper function to group messages by date
+  const groupMessagesByDate = (messages: ChatMessageType[]) => {
+    const grouped: Array<{ date: Date; messages: ChatMessageType[] }> = [];
+    
+    messages.forEach((msg) => {
+      const messageDate = new Date(msg.message.timestamp || msg.created_at || new Date());
+      const lastGroup = grouped[grouped.length - 1];
+      
+      if (!lastGroup || !isSameDay(lastGroup.date, messageDate)) {
+        grouped.push({
+          date: messageDate,
+          messages: [msg]
+        });
+      } else {
+        lastGroup.messages.push(msg);
+      }
+    });
+    
+    return grouped;
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-full">
@@ -86,6 +113,8 @@ export function ChatMessageList({
       </div>
     );
   }
+
+  const groupedMessages = groupMessagesByDate(messages);
 
   return (
     <div className="flex flex-col space-y-4 p-4 overflow-y-auto h-full">
@@ -99,34 +128,42 @@ export function ChatMessageList({
       {/* Intersection observer target for infinite scroll */}
       <div ref={observerRef} className="h-4" />
 
-      {messages.map((msg, index) => {
-        let senderId: string;
-        let messageContent: string;
-        let isOutgoing: boolean;
-        
-        switch (msg.message.type) {
-          case 'human':
-            senderId = extractPhoneNumber(msg.message.content);
-            messageContent = extractMessageContent(msg.message.content);
-            isOutgoing = true;
-            break;
-          default: // 'ai' case
-            senderId = 'AI';
-            messageContent = msg.message.content;
-            isOutgoing = false;
-        }
-        
-        return (
-          <ChatMessage
-            key={msg.id || index}
-            senderId={senderId}
-            message={messageContent}
-            timestamp={msg.message.timestamp || msg.created_at || new Date().toISOString()}
-            isOutgoing={isOutgoing}
-            trigger={msg.message.trigger}
-          />
-        );
-      })}
+      {groupedMessages.map((group, groupIndex) => (
+        <div key={groupIndex}>
+          {/* Date separator */}
+          <DateSeparator date={group.date} />
+          
+          {/* Messages for this date */}
+          {group.messages.map((msg, index) => {
+            let senderId: string;
+            let messageContent: string;
+            let isOutgoing: boolean;
+            
+            switch (msg.message.type) {
+              case 'human':
+                senderId = extractPhoneNumber(msg.message.content);
+                messageContent = extractMessageContent(msg.message.content);
+                isOutgoing = true;
+                break;
+              default: // 'ai' case
+                senderId = 'AI';
+                messageContent = msg.message.content;
+                isOutgoing = false;
+            }
+            
+            return (
+              <ChatMessage
+                key={msg.id || `${groupIndex}-${index}`}
+                senderId={senderId}
+                message={messageContent}
+                timestamp={msg.message.timestamp || msg.created_at || new Date().toISOString()}
+                isOutgoing={isOutgoing}
+                trigger={msg.message.trigger}
+              />
+            );
+          })}
+        </div>
+      ))}
       <div ref={messagesEndRef} />
     </div>
   );
